@@ -1,19 +1,56 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const initialForm = { name: '', breed: '', adopted: false }
-
+const initialState = {name:"", breed:"", adopted:false}
 // Use this form for both POST and PUT requests!
-export default function DogForm() {
-  const [values, setValues] = useState(initialForm)
+export default function DogForm(props) {
+  const [breeds, setBreeds] = useState([])
+  const values = props.formVals
+  const navigate = useNavigate()
+
+  useEffect(() => {
+
+    function fetchBreeds () {
+      fetch("http://localhost:3003/api/dogs/breeds")
+      .then(res => res.json())
+      .then(data => setBreeds(data))
+    }
+    fetchBreeds()
+  },[])
+  
+  const resetForm = () => {
+    props.setFormVals(initialState)
+  } 
+
   const onSubmit = (event) => {
     event.preventDefault()
+    let url = "http://localhost:3003/api/dogs/"
+    if (values.id) {
+      url += values.id 
+    }
+      fetch(url,
+        {
+          method: values.id?"PUT":"POST",
+          body: JSON.stringify(values),
+          headers: {"Content-Type": "Application/json"}
+        }
+       )
+       .then(res => res.json()
+       .then(data => {
+          props.setFormVals(data)
+          resetForm()
+          navigate("/")
+      })
+      )
   }
+
   const onChange = (event) => {
-    const { name, value, type, checked } = event.target
-    setValues({
-      ...values, [name]: type === 'checkbox' ? checked : value
-    })
+    let { name, value, type, checked } = event.target
+    if (type === "checkbox") value = checked
+    props.setFormVals({...props.formVals, [name]: value})
   }
+
+
   return (
     <div>
       <h2>
@@ -34,7 +71,7 @@ export default function DogForm() {
           aria-label="Dog's breed"
         >
           <option value="">---Select Breed---</option>
-          {/* Populate this dropdown using data obtained from the API */}
+          {breeds.map((breed, idx) => <option key={idx}>{breed}</option>)}
         </select>
         <label>
           Adopted: <input
@@ -47,9 +84,9 @@ export default function DogForm() {
         </label>
         <div>
           <button type="submit">
-            Create Dog
+            {values.id? "Edit Dog": "Create Dog"}
           </button>
-          <button aria-label="Reset form">Reset</button>
+          <button onClick={resetForm} aria-label="Reset form">Reset</button>
         </div>
       </form>
     </div>

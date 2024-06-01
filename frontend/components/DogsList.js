@@ -1,17 +1,19 @@
 import React from 'react'
 
-export default function DogsList() {
+export default function DogsList(props) {
   return (
     <div>
       <h2>Dogs Shelter</h2>
       <ul>
-        <li>
-          Fido, Bulldog, NOT adopted
+        {props.dogs.map(dog => 
+        <li key={dog.id}>
+          {`${dog.name}, ${dog.breed}, ${dog.adopted? "": "NOT"} adopted`}
           <div>
-            <button>Edit</button>
-            <button>Delete</button>
+            <button onClick={() => props.editDog(dog.id)}>Edit</button>
+            <button onClick={() => props.deleteDog(dog.id)}>Delete</button>
           </div>
         </li>
+      )}
       </ul>
     </div>
   )
